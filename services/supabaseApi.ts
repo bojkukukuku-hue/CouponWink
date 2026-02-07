@@ -16,7 +16,6 @@ export async function adminLogout() {
 }
 
 export async function getCurrentUser() {
-  // getSession an toàn hơn getUser khi chưa login
   const { data, error } = await supabase.auth.getSession();
   if (error) return null;
   return data.session?.user ?? null;
@@ -35,7 +34,6 @@ export async function isAdmin(): Promise<boolean> {
   if (error) return false;
   return !!data;
 }
-
 
 /* =========================
    COUPONS (ADMIN)
@@ -143,11 +141,7 @@ export async function deletePostAdmin(id: string) {
   if (error) throw error;
 }
 
-/**
- * Toggle publish: is_published true/false
- * Nếu publish -> set published_at = now()
- * Nếu unpublish -> published_at = null
- */
+/** publish/unpublish */
 export async function setPostPublishAdmin(id: string, is_published: boolean) {
   const payload: any = {
     is_published,
@@ -159,94 +153,9 @@ export async function setPostPublishAdmin(id: string, is_published: boolean) {
 }
 
 /* =========================
-   PUBLIC HELPERS (OPTIONAL)
-   - dùng cho trang public blog
+   PUBLIC: STORES / CATEGORIES
 ========================= */
 
-export async function listPublishedPosts() {
-  const { data, error } = await supabase
-    .from("blog_posts")
-    .select("*")
-    .eq("is_published", true)
-    .order("published_at", { ascending: false });
-
-  if (error) throw error;
-  return data ?? [];
-}
-
-export async function getPublishedPostBySlug(slug: string) {
-  const { data, error } = await supabase
-    .from("blog_posts")
-    .select("*")
-    .eq("slug", slug)
-    .eq("is_published", true)
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-export async function listActiveCouponsPublic() {
-  const { data, error } = await supabase
-    .from("coupons")
-    .select("*")
-    .eq("is_active", true)
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return data ?? [];
-}
-export async function listStoresPublic() {
-  const { data, error } = await supabase
-    .from("stores")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return data ?? [];
-}
-
-export async function getStorePublic(id: string) {
-  const { data, error } = await supabase
-    .from("stores")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-export async function listCategoriesPublic() {
-  const { data, error } = await supabase
-    .from("categories")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return data ?? [];
-}
-export async function listPublishedPostsPublic() {
-  const { data, error } = await supabase
-    .from("blog_posts")
-    .select("*")
-    .eq("is_published", true)
-    .order("published_at", { ascending: false });
-
-  if (error) throw error;
-  return data ?? [];
-}
-
-export async function getPublishedPostBySlugPublic(slug: string) {
-  const { data, error } = await supabase
-    .from("blog_posts")
-    .select("*")
-    .eq("slug", slug)
-    .eq("is_published", true)
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-// ========= PUBLIC: STORES / CATEGORIES =========
 export async function listStoresPublic() {
   const { data, error } = await supabase
     .from("stores")
@@ -278,7 +187,10 @@ export async function listCategoriesPublic() {
   return data ?? [];
 }
 
-// ========= PUBLIC: COUPONS =========
+/* =========================
+   PUBLIC: COUPONS
+========================= */
+
 export async function listActiveCouponsPublic() {
   const { data, error } = await supabase
     .from("coupons")
@@ -290,6 +202,7 @@ export async function listActiveCouponsPublic() {
   return data ?? [];
 }
 
+/** Coupons by store (public) */
 export async function listActiveCouponsByStorePublic(storeId: string) {
   const { data, error } = await supabase
     .from("coupons")
@@ -302,6 +215,12 @@ export async function listActiveCouponsByStorePublic(storeId: string) {
   return data ?? [];
 }
 
+/** Alias cho đúng tên bạn dùng ở trang StoreDetail */
+export async function listCouponsByStorePublic(storeId: string) {
+  return listActiveCouponsByStorePublic(storeId);
+}
+
+/** Coupons by category (public) */
 export async function listActiveCouponsByCategoryPublic(categoryId: string) {
   const { data, error } = await supabase
     .from("coupons")
@@ -314,7 +233,46 @@ export async function listActiveCouponsByCategoryPublic(categoryId: string) {
   return data ?? [];
 }
 
-// ========= PUBLIC: BLOG =========
+/** Search (public) - dùng cho SearchResultsPage */
+export async function searchCouponsPublic(opts: { query?: string; category?: string }) {
+  const q = (opts.query || "").trim();
+  const cat = (opts.category || "").trim();
+
+  // Query cơ bản: coupons active + join stores để lấy store name
+  let query = supabase
+    .from("coupons")
+    .select("*, stores(name)")
+    .eq("is_active", true)
+    .order("created_at", { ascending: false });
+
+  // search theo title/code/description (tuỳ schema bạn có field gì)
+  if (q) {
+    query = query.or(`title.ilike.%${q}%,code.ilike.%${q}%,description.ilike.%${q}%`);
+  }
+
+  // filter theo category_id hoặc category name (tuỳ bạn đang truyền)
+  if (cat) {
+    // Nếu bạn truyền category là name thì bạn cần join categories hoặc map name->id.
+    // Ở đây mình ưu tiên: nếu cat là UUID thì dùng category_id
+    const looksUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cat);
+    if (looksUuid) query = query.eq("category_id", cat);
+  }
+
+  const { data, error } = await query;
+
+  if (error) throw error;
+
+  // map lại cho UI dễ dùng
+  return (data ?? []).map((c: any) => ({
+    ...c,
+    store_name: c.stores?.name || "",
+  }));
+}
+
+/* =========================
+   PUBLIC: BLOG
+========================= */
+
 export async function listPublishedPostsPublic() {
   const { data, error } = await supabase
     .from("blog_posts")
@@ -337,4 +295,3 @@ export async function getPublishedPostBySlugPublic(slug: string) {
   if (error) throw error;
   return data;
 }
-
