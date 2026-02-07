@@ -19,10 +19,10 @@ const LegalPage = lazy(() => import('./pages/Public/LegalPage'));
 const LoginPage = lazy(() => import('./pages/Auth/LoginPage'));
 const SignupPage = lazy(() => import('./pages/Auth/SignupPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/Auth/ForgotPasswordPage'));
-const AdminLogin = lazy(() => import('./pages/Auth/AdminLogin')); // ✅ thêm admin login
+const AdminLogin = lazy(() => import('./pages/Auth/AdminLogin'));
 
-// Admin Guard
-const AdminGuard = lazy(() => import('./pages/components/AdminGuard')); // ✅ theo ảnh bạn gửi
+// ✅ Admin Guard (đúng theo cấu trúc repo hiện tại: root/components)
+const AdminGuard = lazy(() => import('./components/AdminGuard'));
 
 // Admin Pages
 const AdminLayout = lazy(() => import('./components/Admin/AdminLayout'));
@@ -64,7 +64,7 @@ const App: React.FC = () => {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
-          {/* ✅ Admin Login Route */}
+          {/* Admin Login Route */}
           <Route path="/admin/login" element={<AdminLogin />} />
 
           {/* ✅ Admin Routes (Protected) */}
