@@ -27,18 +27,15 @@ const HomePage: React.FC = () => {
   const handleShowCode = (deal: any) => {
     const store = stores.find(s => s.id === deal.storeId);
     
-    // 1. Copy to clipboard
     if (deal.code) {
       try {
         navigator.clipboard.writeText(deal.code);
       } catch (e) {}
     }
 
-    // 2. Open Partner Link in new tab
     const partnerLink = deal.link || store?.website || '#';
     window.open(partnerLink, '_blank');
     
-    // 3. Show reveal modal
     setSelectedCoupon({
       storeName: store?.name || deal.storeName || deal.storeId,
       title: deal.title,
@@ -140,7 +137,7 @@ const HomePage: React.FC = () => {
         </div>
       </LazySection>
 
-      {/* Browse by Category */}
+      {/* Browse by Category - Moved Up */}
       <LazySection className="py-20 bg-white dark:bg-slate-950">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex justify-between items-end mb-10">
@@ -170,7 +167,7 @@ const HomePage: React.FC = () => {
         </div>
       </LazySection>
 
-      {/* Today's Best Deals */}
+      {/* Today's Best Deals - Now below Categories */}
       <LazySection className="py-20 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800">
         <div className="max-w-7xl mx-auto px-4">
           <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-1 font-display">Today's Best Deals</h2>
@@ -204,8 +201,112 @@ const HomePage: React.FC = () => {
         </div>
       </LazySection>
 
-      {/* FAQ Section */}
+      {/* Statistics Section */}
+      <section className="py-12 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div className="space-y-1">
+              <div className="text-3xl md:text-4xl font-black text-primary-500 font-display">500+</div>
+              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Stores</div>
+            </div>
+            <div className="space-y-1">
+              <div className="text-3xl md:text-4xl font-black text-primary-500 font-display">2,000+</div>
+              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Verified Codes</div>
+            </div>
+            <div className="space-y-1">
+              <div className="text-3xl md:text-4xl font-black text-primary-500 font-display">100K+</div>
+              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Happy Users</div>
+            </div>
+            <div className="space-y-1">
+              <div className="text-3xl md:text-4xl font-black text-primary-500 font-display">$5M+</div>
+              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Money Saved</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <LazySection className="py-24 bg-slate-50 dark:bg-slate-900/20 border-t border-slate-100 dark:border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-4 font-display">How It Works</h2>
+          <p className="text-slate-500 dark:text-slate-400 mb-16 font-medium">Start saving in three simple steps</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-5xl mx-auto">
+            <div className="space-y-6">
+              <div className="size-16 rounded-2xl bg-primary-100/50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 flex items-center justify-center mx-auto shadow-sm">
+                <span className="material-icons-round text-3xl">search</span>
+              </div>
+              <div className="space-y-3">
+                <h3 className="text-xl font-black text-slate-900 dark:text-white font-display">1. Find Your Store</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-[240px] mx-auto">
+                  Search for your favorite AI tool, hosting service, or SaaS product.
+                </p>
+              </div>
+            </div>
+            <div className="space-y-6">
+              <div className="size-16 rounded-2xl bg-primary-100/50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 flex items-center justify-center mx-auto shadow-sm">
+                <span className="material-icons-round text-3xl">content_copy</span>
+              </div>
+              <div className="space-y-3">
+                <h3 className="text-xl font-black text-slate-900 dark:text-white font-display">2. Copy the Code</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-[240px] mx-auto">
+                  Click to reveal and automatically copy verified promo codes.
+                </p>
+              </div>
+            </div>
+            <div className="space-y-6">
+              <div className="size-16 rounded-2xl bg-primary-100/50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 flex items-center justify-center mx-auto shadow-sm">
+                <span className="material-icons-round text-3xl">savings</span>
+              </div>
+              <div className="space-y-3">
+                <h3 className="text-xl font-black text-slate-900 dark:text-white font-display">3. Save Money</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-[240px] mx-auto">
+                  Apply the code at checkout and enjoy instant savings.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </LazySection>
+
+      {/* Newsletter Section */}
       <section className="py-20 bg-white dark:bg-slate-950">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-[2.5rem] p-12 md:p-20 text-center text-white relative overflow-hidden shadow-2xl">
+            {/* Decorative Orbs */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-900/20 rounded-full -ml-32 -mb-32 blur-3xl"></div>
+            
+            <div className="relative z-10 max-w-3xl mx-auto">
+              <div className="size-16 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mx-auto mb-8 shadow-inner border border-white/20">
+                <span className="material-icons-round text-3xl text-white">mark_email_unread</span>
+              </div>
+              <h2 className="text-3xl md:text-5xl font-black mb-6 font-display">Never Miss a Deal</h2>
+              <p className="text-emerald-50 text-lg mb-12 font-medium opacity-90 leading-relaxed">
+                Get the latest verified promo codes and exclusive deals delivered straight to your inbox. Join 50,000+ savvy shoppers today.
+              </p>
+              
+              <form className="max-w-lg mx-auto flex flex-col sm:flex-row gap-3">
+                <input 
+                  type="email" 
+                  placeholder="Enter your email" 
+                  className="flex-grow px-6 py-4 rounded-xl text-slate-900 placeholder:text-slate-400 font-semibold outline-none border-none shadow-lg focus:ring-4 focus:ring-white/20 transition-all"
+                  required
+                />
+                <button className="bg-slate-900 hover:bg-slate-800 text-white px-8 py-4 rounded-xl font-black text-sm uppercase tracking-widest transition shadow-lg active:scale-95">
+                  Subscribe
+                </button>
+              </form>
+              <p className="text-emerald-100/60 text-[10px] font-black mt-8 uppercase tracking-[0.2em]">
+                No spam, unsubscribe anytime. We respect your privacy.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800">
         <div className="max-w-3xl mx-auto px-4">
           <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-10 font-display text-center">Frequently Asked Questions</h2>
           <div className="space-y-4">
