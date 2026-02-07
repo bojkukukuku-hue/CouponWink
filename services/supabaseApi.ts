@@ -246,4 +246,95 @@ export async function getPublishedPostBySlugPublic(slug: string) {
   if (error) throw error;
   return data;
 }
+// ========= PUBLIC: STORES / CATEGORIES =========
+export async function listStoresPublic() {
+  const { data, error } = await supabase
+    .from("stores")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getStorePublic(id: string) {
+  const { data, error } = await supabase
+    .from("stores")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function listCategoriesPublic() {
+  const { data, error } = await supabase
+    .from("categories")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+// ========= PUBLIC: COUPONS =========
+export async function listActiveCouponsPublic() {
+  const { data, error } = await supabase
+    .from("coupons")
+    .select("*")
+    .eq("is_active", true)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function listActiveCouponsByStorePublic(storeId: string) {
+  const { data, error } = await supabase
+    .from("coupons")
+    .select("*")
+    .eq("is_active", true)
+    .eq("store_id", storeId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function listActiveCouponsByCategoryPublic(categoryId: string) {
+  const { data, error } = await supabase
+    .from("coupons")
+    .select("*")
+    .eq("is_active", true)
+    .eq("category_id", categoryId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+// ========= PUBLIC: BLOG =========
+export async function listPublishedPostsPublic() {
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .select("*")
+    .eq("is_published", true)
+    .order("published_at", { ascending: false });
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getPublishedPostBySlugPublic(slug: string) {
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .select("*")
+    .eq("slug", slug)
+    .eq("is_published", true)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
 
