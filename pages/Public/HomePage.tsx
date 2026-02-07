@@ -5,6 +5,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import LazySection from '../../components/LazySection';
 import CouponModal from '../../components/CouponModal';
 import { MockDB } from '../../services/mockDb';
+import { useEffect, useState } from "react";
+import { listActiveCouponsPublic } from "../../services/supabaseApi";
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -14,6 +16,20 @@ const HomePage: React.FC = () => {
   const [stores, setStores] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [coupons, setCoupons] = useState<any[]>([]);
+  const [coupons, setCoupons] = useState<any[]>([]);
+const [loading, setLoading] = useState(true);
+
+useEffect(() => {
+  (async () => {
+    try {
+      setLoading(true);
+      const data = await listActiveCouponsPublic();
+      setCoupons(data);
+    } finally {
+      setLoading(false);
+    }
+  })();
+}, []);
 
   useEffect(() => {
     setStores(MockDB.getStores().filter((s: any) => s.status === 'Active'));
