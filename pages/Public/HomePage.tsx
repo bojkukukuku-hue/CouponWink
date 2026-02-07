@@ -7,6 +7,9 @@ import CouponModal from '../../components/CouponModal';
 import { MockDB } from '../../services/mockDb';
 import { useEffect, useState } from "react";
 import { listActiveCouponsPublic } from "../../services/supabaseApi";
+import React, { useEffect, useState } from "react";
+import { listActiveCouponsPublic } from "../../services/supabaseApi";
+
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -25,6 +28,22 @@ useEffect(() => {
       setLoading(true);
       const data = await listActiveCouponsPublic();
       setCoupons(data);
+    } finally {
+      setLoading(false);
+    }
+  })();
+}, []);
+const [coupons, setCoupons] = useState<any[]>([]);
+const [loading, setLoading] = useState(true);
+
+useEffect(() => {
+  (async () => {
+    try {
+      setLoading(true);
+      const data = await listActiveCouponsPublic();
+      setCoupons(data);
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoading(false);
     }
