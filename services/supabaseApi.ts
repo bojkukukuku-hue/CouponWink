@@ -16,15 +16,12 @@ export async function adminLogout() {
 }
 
 export async function getCurrentUser() {
-  const { data, error } = await supabase.auth.getUser();
-  if (error) throw error;
-  return data.user;
+  // getSession an toàn hơn getUser khi chưa login
+  const { data, error } = await supabase.auth.getSession();
+  if (error) return null;
+  return data.session?.user ?? null;
 }
 
-/**
- * Admin = user hiện tại có mặt trong bảng `admins` (theo user.id)
- * Bảng admins: user_id (uuid) PK/unique
- */
 export async function isAdmin(): Promise<boolean> {
   const user = await getCurrentUser();
   if (!user) return false;
@@ -38,6 +35,7 @@ export async function isAdmin(): Promise<boolean> {
   if (error) return false;
   return !!data;
 }
+
 
 /* =========================
    COUPONS (ADMIN)
