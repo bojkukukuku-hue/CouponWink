@@ -1,21 +1,23 @@
 import { useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
 import { isAdmin } from "../services/supabaseApi";
-import { useNavigate } from "react-router-dom";
 
 export default function AdminGuard({ children }: { children: JSX.Element }) {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<"loading" | "allowed" | "denied">("loading");
 
   useEffect(() => {
-    async function check() {
-      const ok = await isAdmin();
-      if (!ok) navigate("/admin/login");
-      setLoading(false);
-    }
-    check();
+    (async () => {
+      try {
+        const ok = await isAdmin();
+        setStatus(ok ? "allowed" : "denied");
+      } catch {
+        setStatus("denied");
+      }
+    })();
   }, []);
 
-  if (loading) return <div className="p-6">Checking admin permission…</div>;
+  if (status === "loading") return <div className="p-6">Checking admin permission…</div>;
+  if (status === "denied") return <Navigate to="/admin/login" replace />;
 
   return children;
 }
