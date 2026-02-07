@@ -1,161 +1,213 @@
+import React, { useEffect, useMemo, useState } from "react";
+import Layout from "../../components/Layout";
+import LazySection from "../../components/LazySection";
+import CouponModal from "../../components/CouponModal";
+import { Link, useParams } from "react-router-dom";
+import { getStorePublic, listActiveCouponsByStorePublic } from "../../services/supabaseApi";
 
-import React, { useState, useMemo, useEffect } from 'react';
-import Layout from '../../components/Layout';
-import { useParams, Link, Navigate } from 'react-router-dom';
-import CouponModal from '../../components/CouponModal';
-import { MockDB } from '../../services/mockDb';
+function pickStoreName(s: any) {
+  return s?.name ?? s?.title ?? "Store";
+}
+function pickStoreDesc(s: any) {
+  return s?.description ?? s?.desc ?? "";
+}
+function pickStoreLogo(s: any) {
+  return s?.logo_url ?? s?.logo ?? s?.image_url ?? "";
+}
+function pickStoreWebsite(s: any) {
+  return s?.website ?? s?.site_url ?? s?.url ?? s?.link ?? "";
+}
 
 const StoreDetailPage: React.FC = () => {
   const { id } = useParams();
-  const [selectedCoupon, setSelectedCoupon] = useState<any>(null);
-  const [activeFilter, setActiveFilter] = useState<'All' | 'Verified' | 'Popular'>('All');
-  
   const [store, setStore] = useState<any>(null);
   const [coupons, setCoupons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCoupon, setSelectedCoupon] = useState<any>(null);
 
   useEffect(() => {
-    const stores = MockDB.getStores();
-    const foundStore = stores.find((s: any) => s.id === id);
-    if (foundStore) {
-      setStore(foundStore);
-      const allCoupons = MockDB.getCoupons().filter((c: any) => c.storeId === id && c.status === 'Active');
-      setCoupons(allCoupons);
-    }
-    setLoading(false);
+    if (!id) return;
+    (async () => {
+      try {
+        setLoading(true);
+        const s = await getStorePublic(id);
+        const c = await listActiveCouponsByStorePublic(id);
+        setStore(s);
+        setCoupons(c);
+      } catch (e: any) {
+        console.error(e);
+        setStore(null);
+        setCoupons([]);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, [id]);
 
-  const filteredCoupons = useMemo(() => {
-    return coupons.filter(coupon => {
-      if (activeFilter === 'All') return true;
-      if (activeFilter === 'Verified') return true; // Most are verified in our mock
-      if (activeFilter === 'Popular') return coupon.usage > 500;
-      return true;
-    });
-  }, [activeFilter, coupons]);
+  const storeName = useMemo(() => pickStoreName(store), [store]);
+  const storeDesc = useMemo(() => pickStoreDesc(store), [store]);
+  const storeLogo = useMemo(() => pickStoreLogo(store), [store]);
+  const storeWebsite = useMemo(() => pickStoreWebsite(store), [store]);
 
-  if (loading) return <Layout><div className="p-20 text-center">Loading...</div></Layout>;
-  if (!store) return <Navigate to="/404" replace />;
-
-  const handleReveal = (coupon: any) => {
-    // 1. Copy code
-    if (coupon.code) {
+  const handleShowCode = (deal: any) => {
+    const code = deal?.code ?? "";
+    if (code) {
       try {
-        navigator.clipboard.writeText(coupon.code);
+        navigator.clipboard.writeText(code);
       } catch (e) {}
     }
+    const partnerLink = deal?.link ?? storeWebsite ?? "#";
+    if (partnerLink && partnerLink !== "#") window.open(partnerLink, "_blank");
 
-    // 2. Open Partner Link
-    const partnerLink = coupon.link || store.website || '#';
-    window.open(partnerLink, '_blank');
-    
-    // 3. Show Modal
     setSelectedCoupon({
-      storeName: store.name,
-      title: coupon.title,
-      code: coupon.code,
-      discountValue: coupon.label,
-      link: partnerLink
+      storeName,
+      title: deal?.title ?? "",
+      code,
+      discountValue: deal?.label ?? deal?.discount_label ?? "",
+      link: partnerLink,
     });
   };
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        {/* Breadcrumb */}
-        <nav className="flex text-[10px] font-black text-slate-400 mb-10 items-center gap-2 uppercase tracking-widest">
-          <Link to="/" className="hover:text-primary-500 transition-colors">Home</Link>
-          <span className="material-icons-round text-sm">chevron_right</span>
-          <Link to="/search" className="hover:text-primary-500 transition-colors">Stores</Link>
-          <span className="material-icons-round text-sm">chevron_right</span>
-          <span className="text-slate-900 dark:text-white font-black">{store.name}</span>
-        </nav>
+      <header className="pt-20 pb-10 px-4 bg-gradient-to-b from-primary-50 to-transparent dark:from-slate-900 dark:to-transparent">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <Link
+              to="/search"
+              className="text-xs font-black text-slate-400 hover:text-primary-500 uppercase tracking-widest flex items-center gap-2 transition border border-slate-200 dark:border-slate-800 px-4 py-2 rounded-lg bg-white dark:bg-slate-900"
+            >
+              <span className="material-icons-round text-sm">arrow_back</span> Back
+            </Link>
 
-        {/* Store Header */}
-        <div className="bg-white dark:bg-slate-900 rounded-[3rem] shadow-sm border border-slate-200 dark:border-slate-800 p-10 mb-12 relative overflow-hidden">
-          <div className="flex flex-col md:flex-row gap-12 items-center md:items-start relative z-10">
-            <div className="w-40 h-40 rounded-[2.5rem] bg-slate-50 dark:bg-slate-800 flex items-center justify-center p-6 shrink-0 shadow-lg border border-slate-100 dark:border-slate-700">
-               {store.useCustomImage && store.customImage ? (
-                  <img src={store.customImage} alt={store.name} className="w-full h-full object-cover" />
-               ) : (
-                  <span className={`material-icons-round text-7xl ${store.color || 'text-primary-500'}`}>{store.logo || 'storefront'}</span>
-               )}
-            </div>
-            <div className="flex-grow text-center md:text-left">
-              <h1 className="text-5xl font-black text-slate-900 dark:text-white font-display tracking-tight mb-4">{store.name}</h1>
-              <div className="flex items-center justify-center md:justify-start gap-3 mb-6">
-                <div className="flex text-yellow-400">
-                  {Array(5).fill(0).map((_, i) => <span key={i} className="material-icons-round text-xl">star</span>)}
-                </div>
-                <span className="text-lg font-black text-slate-900 dark:text-white">{store.rating}</span>
-                <span className="text-slate-400 font-bold">({store.reviews || 0} reviews)</span>
-              </div>
-              <p className="text-slate-600 dark:text-slate-400 text-lg max-w-2xl mb-8 leading-relaxed font-medium">
-                {store.description}
-              </p>
-              <a href={store.website} target="_blank" rel="noopener noreferrer" className="inline-flex bg-primary-500 hover:bg-primary-600 text-white font-black px-10 py-4 rounded-2xl items-center gap-3 transition shadow-xl shadow-primary-500/20 active:scale-95">
-                Go to Website <span className="material-icons-round">open_in_new</span>
+            {storeWebsite ? (
+              <a
+                href={storeWebsite}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs font-black text-slate-400 hover:text-primary-500 uppercase tracking-widest flex items-center gap-2 transition border border-slate-200 dark:border-slate-800 px-4 py-2 rounded-lg bg-white dark:bg-slate-900"
+              >
+                Visit Site <span className="material-icons-round text-sm">open_in_new</span>
               </a>
+            ) : null}
+          </div>
+
+          {loading ? (
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-10 animate-pulse">
+              <div className="h-8 bg-slate-100 dark:bg-slate-800 rounded w-1/3 mb-4" />
+              <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-2/3 mb-2" />
+              <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-1/2" />
+            </div>
+          ) : !store ? (
+            <div className="text-center py-16">
+              <h1 className="text-3xl font-black text-slate-900 dark:text-white font-display mb-2">
+                Store not found
+              </h1>
+              <p className="text-slate-500 dark:text-slate-400 font-medium">
+                The store may not exist or the link is incorrect.
+              </p>
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 md:p-10">
+              <div className="flex flex-col md:flex-row gap-8 items-start">
+                <div className="shrink-0">
+                  <div className="w-20 h-20 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden flex items-center justify-center">
+                    {storeLogo ? (
+                      <img src={storeLogo} alt={storeName} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="material-icons-round text-4xl text-primary-500">storefront</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex-grow">
+                  <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white font-display mb-3">
+                    {storeName}
+                  </h1>
+                  <p className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+                    {storeDesc || "Find the latest verified coupons and deals for this store."}
+                  </p>
+
+                  <div className="flex flex-wrap gap-3 mt-6">
+                    <span className="px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 text-[10px] font-black uppercase tracking-widest border border-emerald-200 dark:border-emerald-900/40">
+                      Verified daily
+                    </span>
+                    <span className="px-3 py-1 rounded-full bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 text-[10px] font-black uppercase tracking-widest border border-primary-200 dark:border-primary-900/40">
+                      {coupons.length} deals
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </header>
+
+      <LazySection className="pb-24">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white font-display">
+                Active Deals
+              </h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">
+                Click to reveal and copy code
+              </p>
             </div>
           </div>
-        </div>
 
-        {/* Coupon List */}
-        <div className="space-y-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-            <h2 className="text-2xl font-black text-slate-900 dark:text-white font-display">Active Offers ({filteredCoupons.length})</h2>
-            <div className="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl gap-1">
-              {(['All', 'Verified', 'Popular'] as const).map((filter) => (
-                <button
-                  key={filter}
-                  onClick={() => setActiveFilter(filter)}
-                  className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                    activeFilter === filter 
-                      ? 'bg-white dark:bg-slate-700 text-primary-500 shadow-sm' 
-                      : 'text-slate-400 hover:text-slate-600'
-                  }`}
+          {loading ? (
+            <div className="text-slate-500 text-sm">Loading deals…</div>
+          ) : coupons.length === 0 ? (
+            <div className="text-slate-500 text-sm">No active coupons found for this store.</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {coupons.map((deal: any, i: number) => (
+                <div
+                  key={deal.id ?? i}
+                  className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 hover:shadow-xl transition-all flex flex-col"
                 >
-                  {filter}
-                </button>
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex gap-2">
+                      <span className="px-2 py-1 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
+                        <span className="material-icons-round text-xs">verified</span> Verified
+                      </span>
+                      {deal.type ? (
+                        <span className="px-2 py-1 rounded bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 text-[10px] font-black uppercase tracking-widest">
+                          {deal.type}
+                        </span>
+                      ) : null}
+                    </div>
+                    <div className="text-lg font-black text-primary-500">
+                      {deal.label ?? deal.discount_label ?? ""}
+                    </div>
+                  </div>
+
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white mb-1">
+                    {deal.title ?? ""}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed mb-6 flex-grow">
+                    {deal.desc ?? deal.description ?? ""}
+                  </p>
+
+                  <button
+                    onClick={() => handleShowCode(deal)}
+                    className="bg-primary-500 hover:bg-primary-600 text-white py-3 rounded-xl font-black text-sm transition flex items-center justify-center gap-2"
+                  >
+                    <span className="material-icons-round text-lg">content_copy</span>
+                    Show Code
+                  </button>
+                </div>
               ))}
             </div>
-          </div>
-          
-          <div className="space-y-6">
-            {filteredCoupons.map((coupon, i) => (
-              <div key={i} className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 p-8 shadow-sm flex flex-col md:flex-row gap-8 items-center">
-                 <div className="shrink-0 text-center md:text-left min-w-[120px]">
-                    <div className="text-4xl font-black text-primary-500 mb-1 leading-none">{coupon.label}</div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Discount</p>
-                 </div>
-                 <div className="flex-grow text-center md:text-left">
-                    <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2 font-display">{coupon.title}</h3>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm font-medium leading-relaxed">{coupon.desc}</p>
-                 </div>
-                 <div className="shrink-0 w-full md:w-64">
-                    <button 
-                      onClick={() => handleReveal(coupon)}
-                      className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-primary-500/30 hover:border-primary-500 rounded-2xl py-4 px-6 font-black text-primary-500 uppercase tracking-widest text-xs transition-all flex items-center justify-between"
-                    >
-                      <span>{coupon.type === 'Code' ? '••••••••' : 'ACTIVATE'}</span>
-                      <span className="bg-primary-500 text-white px-4 py-2 rounded-xl">Reveal</span>
-                    </button>
-                 </div>
-              </div>
-            ))}
-            {filteredCoupons.length === 0 && (
-              <div className="p-20 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[3rem]">
-                <p className="text-slate-400 font-bold">No active coupons found matching your criteria.</p>
-              </div>
-            )}
-          </div>
+          )}
         </div>
-      </div>
+      </LazySection>
 
-      <CouponModal 
-        isOpen={!!selectedCoupon} 
-        onClose={() => setSelectedCoupon(null)} 
-        coupon={selectedCoupon} 
+      <CouponModal
+        isOpen={!!selectedCoupon}
+        onClose={() => setSelectedCoupon(null)}
+        coupon={selectedCoupon}
       />
     </Layout>
   );
