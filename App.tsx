@@ -1,4 +1,3 @@
-
 import React, { lazy, Suspense } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LoadingSkeleton from './components/LoadingSkeleton';
@@ -20,6 +19,10 @@ const LegalPage = lazy(() => import('./pages/Public/LegalPage'));
 const LoginPage = lazy(() => import('./pages/Auth/LoginPage'));
 const SignupPage = lazy(() => import('./pages/Auth/SignupPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/Auth/ForgotPasswordPage'));
+const AdminLogin = lazy(() => import('./pages/Auth/AdminLogin')); // ✅ thêm admin login
+
+// Admin Guard
+const AdminGuard = lazy(() => import('./pages/components/AdminGuard')); // ✅ theo ảnh bạn gửi
 
 // Admin Pages
 const AdminLayout = lazy(() => import('./components/Admin/AdminLayout'));
@@ -61,8 +64,18 @@ const App: React.FC = () => {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
-          {/* Admin Routes */}
-          <Route path="/admin" element={<AdminLayout />}>
+          {/* ✅ Admin Login Route */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+
+          {/* ✅ Admin Routes (Protected) */}
+          <Route
+            path="/admin"
+            element={
+              <AdminGuard>
+                <AdminLayout />
+              </AdminGuard>
+            }
+          >
             <Route index element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="stores" element={<AdminStoreManagement />} />
