@@ -37,7 +37,7 @@ const AdminSettings: React.FC = () => {
   const fonts = ["Plus Jakarta Sans", "Inter", "Roboto", "Montserrat", "Poppins", "Open Sans", "System UI"];
   const sizes = ["12px", "14px", "16px", "18px", "20px", "24px", "32px", "40px", "48px", "64px", "80px"];
 
-  const tabs = ['General', 'Homepage', 'Display', 'SEO', 'Branding', 'Typography', 'Advanced'];
+  const tabs = ['General', 'Homepage', 'Display', 'SEO', 'Branding', 'Typography', 'Database', 'Advanced'];
 
   if (!settings.siteName) return null;
 
@@ -408,6 +408,65 @@ const AdminSettings: React.FC = () => {
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mô tả Meta (Description)</label>
               <textarea className="w-full bg-slate-50 dark:bg-slate-800 border-0 rounded-2xl p-4 font-medium h-24 resize-none" value={settings.metaDescription} onChange={e => setSettings({...settings, metaDescription: e.target.value})} />
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'Database' && (
+          <div className="space-y-12 animate-in fade-in">
+            <div className="bg-slate-50 dark:bg-slate-800 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 p-10 space-y-8">
+              <div className="flex items-center gap-4 mb-2">
+                <div className="size-12 rounded-2xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                  <span className="material-icons-round text-amber-600 dark:text-amber-400">storage</span>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-black text-slate-900 dark:text-white font-display">Kết nối Cơ sở dữ liệu (SQL)</h2>
+                  <p className="text-slate-500 text-sm font-medium">Cấu hình URL API để lưu trữ dữ liệu lên hosting của bạn.</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6">
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">URL API (api.php)</label>
+                  <div className="flex flex-col md:flex-row gap-3 mt-2">
+                    <input 
+                      type="text" 
+                      placeholder="https://yourdomain.com/api.php"
+                      className="flex-1 bg-white dark:bg-slate-900 rounded-xl p-4 font-bold border-0 focus:ring-2 focus:ring-primary-500" 
+                      defaultValue={localStorage.getItem('cw_api_url') || ''} 
+                      id="remote-api-url"
+                    />
+                    <button 
+                      onClick={() => {
+                        const input = document.getElementById('remote-api-url') as HTMLInputElement;
+                        if (input) {
+                          if (window.confirm('Thay đổi URL API sẽ tải lại trang để áp dụng kết nối mới. Bạn có chắc chắn?')) {
+                            MockDB.setApiUrl(input.value);
+                          }
+                        }
+                      }}
+                      className="px-10 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition shadow-lg"
+                    >
+                      Lưu & Kết nối
+                    </button>
+                  </div>
+                  <div className="mt-6 p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-700 space-y-4">
+                    <h4 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">Hướng dẫn kết nối:</h4>
+                    <ol className="text-sm text-slate-500 space-y-3 list-decimal ml-4 font-medium">
+                      <li>Tải file <code className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-primary-500">api.php</code> và <code className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-primary-500">database.sql</code> lên hosting của bạn.</li>
+                      <li>Mở phpMyAdmin, tạo database và Import file <code className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-primary-500">database.sql</code>.</li>
+                      <li>Chỉnh sửa thông tin Database (host, dbname, user, pass) trong file <code className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-primary-500">api.php</code>.</li>
+                      <li>Copy URL của file <code className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-primary-500">api.php</code> dán vào ô bên trên và nhấn Lưu.</li>
+                    </ol>
+                    <div className="p-4 bg-amber-50 dark:bg-amber-900/10 rounded-xl border border-amber-100 dark:border-amber-900/20">
+                       <p className="text-xs text-amber-700 dark:text-amber-400 font-bold flex items-center gap-2">
+                         <span className="material-icons-round text-sm">info</span>
+                         Lưu ý: Hosting của bạn cần hỗ trợ CORS để Preview này có thể gửi dữ liệu tới.
+                       </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}

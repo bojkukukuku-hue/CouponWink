@@ -1,5 +1,5 @@
 
-const API_URL = 'api.php';
+const API_URL = localStorage.getItem('cw_api_url') || 'api.php';
 
 const DEFAULT_SETTINGS = {
   siteName: 'CouponWink',
@@ -184,10 +184,15 @@ export const MockDB = {
   async saveStore(store: any) { 
     if (!store.id) store.id = store.name.toLowerCase().replace(/\s+/g, '-');
     if (!store.createdAt) store.createdAt = new Date().toISOString();
-    if (store.clicks === undefined) store.clicks = 0;
+    
+    // Map frontend fields to database fields
+    const dbStore = {
+      ...store,
+      reviews: store.deals || store.reviews || 0
+    };
     
     try {
-      await apiFetch('save_store', 'POST', store); 
+      await apiFetch('save_store', 'POST', dbStore); 
     } catch (e) {}
 
     // LocalStorage fallback
@@ -203,10 +208,16 @@ export const MockDB = {
   async saveCoupon(coupon: any) { 
     if (!coupon.id) coupon.id = 'c-' + Math.random().toString(36).substr(2, 9);
     if (!coupon.createdAt) coupon.createdAt = new Date().toISOString();
-    if (coupon.usage === undefined) coupon.usage = 0;
+    
+    // Map frontend fields to database fields
+    const dbCoupon = {
+      ...coupon,
+      usage_count: coupon.usage || 0,
+      description: coupon.desc || coupon.description || ''
+    };
     
     try {
-      await apiFetch('save_coupon', 'POST', coupon); 
+      await apiFetch('save_coupon', 'POST', dbCoupon); 
     } catch (e) {}
 
     const coupons = JSON.parse(localStorage.getItem('cw_coupons') || '[]');
@@ -221,7 +232,6 @@ export const MockDB = {
   async saveCategory(cat: any) { 
     if (!cat.id) cat.id = cat.name.toLowerCase().replace(/\s+/g, '-');
     if (!cat.createdAt) cat.createdAt = new Date().toISOString();
-    if (cat.clicks === undefined) cat.clicks = 0;
     
     try {
       await apiFetch('save_category', 'POST', cat); 
@@ -236,7 +246,14 @@ export const MockDB = {
     await this.init(); 
   },
   async deleteCategory(id: string) { await apiFetch('delete_category', 'DELETE', { id }); await this.init(); },
-  async saveBlog(blog: any) { await apiFetch('save_blog', 'POST', blog); await this.init(); },
+  async saveBlog(blog: any) { 
+    const dbBlog = {
+      ...blog,
+      publish_date: blog.date || blog.publish_date || new Date().toISOString().split('T')[0]
+    };
+    await apiFetch('save_blog', 'POST', dbBlog); 
+    await this.init(); 
+  },
   async deleteBlog(id: string) { await apiFetch('delete_blog', 'DELETE', { id }); await this.init(); },
   async saveMenus(menus: any[]) { await apiFetch('save_menus', 'POST', menus); await this.init(); },
   async saveSettings(settings: any) { 
@@ -246,6 +263,11 @@ export const MockDB = {
     localStorage.setItem('cw_settings', JSON.stringify(settings));
     this._cache.settings = settings;
     this.applyGlobalSettings(settings);
+  },
+
+  setApiUrl(url: string) {
+    localStorage.setItem('cw_api_url', url);
+    window.location.reload();
   },
 
   applyGlobalSettings(settings: any) {

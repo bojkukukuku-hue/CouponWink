@@ -10,10 +10,11 @@ ini_set('display_errors', 0);
 
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 header("Content-Type: application/json; charset=UTF-8");
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
     exit(0);
 }
 
@@ -94,7 +95,7 @@ switch ($action) {
             isset($input['useCustomImage']) && $input['useCustomImage'] ? 1 : 0, 
             $input['color'] ?? 'text-primary-500', 
             $input['rating'] ?? 4.5, 
-            $input['reviews'] ?? 0, 
+            $input['reviews'] ?? ($input['deals'] ?? 0), 
             $input['status'] ?? 'Active', 
             $input['description'] ?? '', 
             $input['website'] ?? ''
@@ -122,9 +123,9 @@ switch ($action) {
             $input['type'], 
             $input['label'], 
             $input['status'] ?? 'Active', 
-            $input['usage_count'] ?? 0, 
+            $input['usage_count'] ?? ($input['usage'] ?? 0), 
             $input['expiry'] ?? null, 
-            $input['description'] ?? '', 
+            $input['description'] ?? ($input['desc'] ?? ''), 
             $input['link'] ?? ''
         ]);
         send_json(['success' => true]);
