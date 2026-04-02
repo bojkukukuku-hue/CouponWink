@@ -1,32 +1,35 @@
 
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
+import { MockDB } from '../../services/mockDb';
 
 const AdminLayout: React.FC = () => {
   const location = useLocation();
+  const currentUser = MockDB.getCurrentUser();
   
   const menuGroups = [
     {
-      title: "System",
+      title: "Hệ thống",
       items: [
         { label: "Dashboard", icon: "dashboard", path: "/admin/dashboard" },
-        { label: "Analytics", icon: "insights", path: "/admin/analytics" },
+        { label: "Thống kê", icon: "insights", path: "/admin/analytics" },
       ]
     },
     {
-      title: "Core Content",
+      title: "Nội dung chính",
       items: [
-        { label: "Store Management", icon: "storefront", path: "/admin/stores" },
-        { label: "Categories", icon: "category", path: "/admin/categories" },
-        { label: "Promo Codes", icon: "confirmation_number", path: "/admin/coupons" },
-        { label: "Blog Posts", icon: "edit_note", path: "/admin/posts" },
+        { label: "Cửa hàng", icon: "storefront", path: "/admin/stores" },
+        { label: "Danh mục", icon: "category", path: "/admin/categories" },
+        { label: "Mã giảm giá", icon: "confirmation_number", path: "/admin/coupons" },
+        { label: "Bài viết Blog", icon: "edit_note", path: "/admin/posts" },
+        { label: "Quản lý Menu", icon: "menu", path: "/admin/menu" },
       ]
     },
     {
-      title: "Configuration",
+      title: "Cấu hình",
       items: [
-        { label: "User Management", icon: "manage_accounts", path: "/admin/users" },
-        { label: "General Settings", icon: "settings", path: "/admin/settings" },
+        { label: "Người dùng", icon: "manage_accounts", path: "/admin/users" },
+        { label: "Cài đặt chung", icon: "settings", path: "/admin/settings" },
         { label: "Media Library", icon: "perm_media", path: "/admin/media" },
       ]
     }
@@ -74,13 +77,17 @@ const AdminLayout: React.FC = () => {
         <div className="p-6 border-t border-slate-800 bg-slate-900/50">
           <div className="flex items-center gap-3 px-2">
              <div className="size-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-500 overflow-hidden">
-                <img src="https://i.pravatar.cc/100?u=admin" alt="Admin" className="w-full h-full object-cover" />
+                <img src={`https://ui-avatars.com/api/?name=${currentUser?.username || 'Admin'}&background=10b981&color=fff`} alt="Admin" className="w-full h-full object-cover" />
              </div>
              <div className="flex-grow min-w-0">
-                <p className="text-sm font-black truncate">Jane Admin</p>
-                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Administrator</p>
+                <p className="text-sm font-black truncate">{currentUser?.username || 'Administrator'}</p>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{currentUser?.role || 'Admin'}</p>
              </div>
-             <button className="text-slate-400 hover:text-red-500 transition-colors">
+             <button 
+                onClick={() => MockDB.logout()}
+                className="text-slate-400 hover:text-red-500 transition-colors"
+                title="Đăng xuất"
+              >
                 <span className="material-icons-round text-xl">logout</span>
              </button>
           </div>
@@ -99,7 +106,7 @@ const AdminLayout: React.FC = () => {
           <div className="flex items-center gap-6">
              <div className="relative hidden md:block">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 material-icons-round text-slate-400 text-sm">search</span>
-                <input className="bg-slate-50 dark:bg-slate-800 pl-10 pr-4 py-2.5 rounded-xl border-0 text-[10px] font-bold w-64 focus:ring-2 focus:ring-primary-500 outline-none" placeholder="Quick search..." />
+                <input className="bg-slate-50 dark:bg-slate-800 pl-10 pr-4 py-2.5 rounded-xl border-0 text-[10px] font-bold w-64 focus:ring-2 focus:ring-primary-500 outline-none" placeholder="Tìm kiếm nhanh..." />
              </div>
              <button className="size-10 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center relative">
                 <span className="material-icons-round">notifications</span>

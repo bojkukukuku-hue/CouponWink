@@ -1,8 +1,26 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { MockDB } from '../services/mockDb';
 
 const Footer: React.FC = () => {
+  const [categories, setCategories] = useState<any[]>([]);
+  const [stores, setStores] = useState<any[]>([]);
+  const [settings, setSettings] = useState<any>({});
+
+  useEffect(() => {
+    const loadedCategories = MockDB.getCategories();
+    const loadedStores = MockDB.getStores();
+    const loadedSettings = MockDB.getSettings();
+    
+    setCategories(loadedCategories);
+    setStores(loadedStores);
+    setSettings(loadedSettings);
+  }, []);
+
+  const catLimit = settings.display?.footerCategoryCount || 4;
+  const storeLimit = settings.display?.footerStoreCount || 4;
+
   return (
     <footer className="bg-slate-50 dark:bg-slate-900 pt-16 pb-8 border-t border-slate-200 dark:border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -38,20 +56,38 @@ const Footer: React.FC = () => {
           <div>
             <h4 className="font-black text-slate-900 dark:text-white mb-6 uppercase text-[10px] tracking-widest">Top Categories</h4>
             <ul className="space-y-3 text-sm font-medium text-slate-500 dark:text-slate-400">
-              <li><Link to="/categories" className="hover:text-primary-500 transition-colors">AI Writing Tools</Link></li>
-              <li><Link to="/categories" className="hover:text-primary-500 transition-colors">AI Image Generation</Link></li>
-              <li><Link to="/categories" className="hover:text-primary-500 transition-colors">Web Hosting</Link></li>
-              <li><Link to="/categories" className="hover:text-primary-500 transition-colors">SEO Tools</Link></li>
+              {categories.slice(0, catLimit).map(cat => (
+                <li key={cat.id}>
+                  <Link to={`/category/${cat.id}`} className="hover:text-primary-500 transition-colors">{cat.name}</Link>
+                </li>
+              ))}
+              {categories.length === 0 && (
+                <>
+                  <li><Link to="/categories" className="hover:text-primary-500 transition-colors">AI Writing Tools</Link></li>
+                  <li><Link to="/categories" className="hover:text-primary-500 transition-colors">AI Image Generation</Link></li>
+                  <li><Link to="/categories" className="hover:text-primary-500 transition-colors">Web Hosting</Link></li>
+                  <li><Link to="/categories" className="hover:text-primary-500 transition-colors">SEO Tools</Link></li>
+                </>
+              )}
             </ul>
           </div>
           
           <div>
             <h4 className="font-black text-slate-900 dark:text-white mb-6 uppercase text-[10px] tracking-widest">Popular Stores</h4>
             <ul className="space-y-3 text-sm font-medium text-slate-500 dark:text-slate-400">
-              <li><Link to="/store/cloudways" className="hover:text-primary-500 transition-colors">Cloudways</Link></li>
-              <li><Link to="/store/jasper" className="hover:text-primary-500 transition-colors">Jasper AI</Link></li>
-              <li><Link to="/store/hostinger" className="hover:text-primary-500 transition-colors">Hostinger</Link></li>
-              <li><Link to="/store/notion" className="hover:text-primary-500 transition-colors">Notion</Link></li>
+              {stores.slice(0, storeLimit).map(store => (
+                <li key={store.id}>
+                  <Link to={`/store/${store.id}`} className="hover:text-primary-500 transition-colors">{store.name}</Link>
+                </li>
+              ))}
+              {stores.length === 0 && (
+                <>
+                  <li><Link to="/store/cloudways" className="hover:text-primary-500 transition-colors">Cloudways</Link></li>
+                  <li><Link to="/store/jasper" className="hover:text-primary-500 transition-colors">Jasper AI</Link></li>
+                  <li><Link to="/store/hostinger" className="hover:text-primary-500 transition-colors">Hostinger</Link></li>
+                  <li><Link to="/store/notion" className="hover:text-primary-500 transition-colors">Notion</Link></li>
+                </>
+              )}
             </ul>
           </div>
 
@@ -67,7 +103,7 @@ const Footer: React.FC = () => {
         </div>
         
         <div className="border-t border-slate-200 dark:border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center text-[10px] font-black text-slate-400 uppercase tracking-widest">
-          <p>© 2024 CouponWink. All rights reserved.</p>
+          <p>© 2025 CouponWink. All rights reserved.</p>
           <div className="flex gap-6 mt-4 md:mt-0">
             <Link to="/legal" className="hover:text-slate-900 dark:hover:text-white transition-colors">Privacy Policy</Link>
             <Link to="/legal" className="hover:text-slate-900 dark:hover:text-white transition-colors">Terms of Service</Link>

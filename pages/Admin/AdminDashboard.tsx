@@ -1,14 +1,33 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { MockDB } from '../../services/mockDb';
 
 const AdminDashboard: React.FC = () => {
-  const stats = [
-    { label: "Active Coupons", value: "842", trend: "+12", icon: "confirmation_number", color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
-    { label: "Total Views", value: "48.2k", trend: "+2.4k", icon: "visibility", color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-900/20" },
-    { label: "Conversion Rate", value: "14.5%", trend: "+0.8%", icon: "ads_click", color: "text-purple-500", bg: "bg-purple-50 dark:bg-purple-900/20" },
-    { label: "Estimated Revenue", value: "$4,290", trend: "+$420", icon: "payments", color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-900/20" },
-  ];
+  const [stats, setStats] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadStats = async () => {
+      const coupons = MockDB.getCoupons();
+      const stores = MockDB.getStores();
+      const categories = MockDB.getCategories();
+      
+      const totalClicks = stores.reduce((acc, s) => acc + (s.clicks || 0), 0) + 
+                          categories.reduce((acc, c) => acc + (c.clicks || 0), 0);
+      
+      const activeCoupons = coupons.filter(c => c.status === 'Active').length;
+      
+      setStats([
+        { label: "Active Coupons", value: activeCoupons.toString(), trend: "+12", icon: "confirmation_number", color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
+        { label: "Total Views", value: (totalClicks / 1000).toFixed(1) + "k", trend: "+2.4k", icon: "visibility", color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-900/20" },
+        { label: "Conversion Rate", value: "14.5%", trend: "+0.8%", icon: "ads_click", color: "text-purple-500", bg: "bg-purple-50 dark:bg-purple-900/20" },
+        { label: "Estimated Revenue", value: "$" + (totalClicks * 0.05).toFixed(0), trend: "+$420", icon: "payments", color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-900/20" },
+      ]);
+      setLoading(false);
+    };
+    loadStats();
+  }, []);
 
   const quickActions = [
     { label: "New Coupon", icon: "add_circle", path: "/admin/coupons/new", color: "bg-primary-500" },
@@ -22,7 +41,7 @@ const AdminDashboard: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-4xl font-black tracking-tight font-display text-slate-900 dark:text-white">Dashboard</h1>
-          <p className="text-slate-500 font-medium mt-1">Good morning, Jane! Here's a summary of today's activity.</p>
+          <p className="text-slate-500 font-medium mt-1">Chào buổi sáng! Đây là tóm tắt hoạt động hôm nay.</p>
         </div>
         <div className="flex gap-3">
            <button className="px-6 py-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm font-black text-slate-600 dark:text-slate-400 hover:bg-slate-50 transition shadow-sm">
@@ -36,25 +55,31 @@ const AdminDashboard: React.FC = () => {
 
       {/* Statistics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, i) => (
-          <div key={i} className="bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm group hover:border-primary-500/30 transition-all">
-             <div className="flex justify-between items-start mb-6">
-                <div className={`size-14 rounded-xl ${stat.bg} ${stat.color} flex items-center justify-center transition-transform group-hover:scale-110`}>
-                   <span className="material-icons-round text-3xl">{stat.icon}</span>
-                </div>
-                <div className="text-right">
-                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
-                   <h3 className="text-3xl font-black text-slate-900 dark:text-white">{stat.value}</h3>
-                </div>
-             </div>
-             <div className="flex items-center gap-2">
-                <span className="flex items-center gap-0.5 text-[10px] font-black text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-lg">
-                   <span className="material-icons-round text-xs">trending_up</span> {stat.trend}
-                </span>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">since last month</span>
-             </div>
-          </div>
-        ))}
+        {loading ? (
+          Array(4).fill(0).map((_, i) => (
+            <div key={i} className="h-32 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse" />
+          ))
+        ) : (
+          stats.map((stat, i) => (
+            <div key={i} className="bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm group hover:border-primary-500/30 transition-all">
+               <div className="flex justify-between items-start mb-6">
+                  <div className={`size-14 rounded-xl ${stat.bg} ${stat.color} flex items-center justify-center transition-transform group-hover:scale-110`}>
+                     <span className="material-icons-round text-3xl">{stat.icon}</span>
+                  </div>
+                  <div className="text-right">
+                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
+                     <h3 className="text-3xl font-black text-slate-900 dark:text-white">{stat.value}</h3>
+                  </div>
+               </div>
+               <div className="flex items-center gap-2">
+                  <span className="flex items-center gap-0.5 text-[10px] font-black text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-lg">
+                     <span className="material-icons-round text-xs">trending_up</span> {stat.trend}
+                  </span>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">since last month</span>
+               </div>
+            </div>
+          ))
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -78,7 +103,7 @@ const AdminDashboard: React.FC = () => {
               <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-10">
                  <div>
                     <h3 className="text-2xl font-black mb-2 font-display">Optimization Tips</h3>
-                    <p className="text-slate-400 font-medium max-w-md">"AI Tools" category is receiving the most views. Adding 3-5 new codes could increase conversion by 22%.</p>
+                    <p className="text-slate-400 font-medium max-w-md">Danh mục AI Tools đang nhận được nhiều lượt xem nhất. Thêm 3-5 mã mới có thể tăng tỷ lệ chuyển đổi lên 22%.</p>
                  </div>
                  <button className="shrink-0 bg-white text-slate-900 px-8 py-4 rounded-xl font-black text-sm hover:bg-primary-500 hover:text-white transition shadow-xl shadow-white/5 active:scale-95">
                     View Trends

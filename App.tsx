@@ -1,7 +1,9 @@
-import React, { lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+
+import React, { lazy, Suspense, useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import LoadingSkeleton from './components/LoadingSkeleton';
 import ScrollToTop from './components/ScrollToTop';
+import { MockDB } from './services/mockDb';
 
 // Public Pages
 const HomePage = lazy(() => import('./pages/Public/HomePage'));
@@ -19,10 +21,6 @@ const LegalPage = lazy(() => import('./pages/Public/LegalPage'));
 const LoginPage = lazy(() => import('./pages/Auth/LoginPage'));
 const SignupPage = lazy(() => import('./pages/Auth/SignupPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/Auth/ForgotPasswordPage'));
-const AdminLogin = lazy(() => import('./pages/Auth/AdminLogin'));
-
-// ✅ Admin Guard (đúng theo cấu trúc repo hiện tại: root/components)
-const AdminGuard = lazy(() => import('./components/AdminGuard'));
 
 // Admin Pages
 const AdminLayout = lazy(() => import('./components/Admin/AdminLayout'));
@@ -37,11 +35,43 @@ const AdminSettings = lazy(() => import('./pages/Admin/AdminSettings'));
 const AdminStoreManagement = lazy(() => import('./pages/Admin/AdminStoreManagement'));
 const AdminCategoryManagement = lazy(() => import('./pages/Admin/AdminCategoryManagement'));
 const AdminPostManagement = lazy(() => import('./pages/Admin/AdminPostManagement'));
+const AdminMenuManagement = lazy(() => import('./pages/Admin/AdminMenuManagement'));
 
 // Misc
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
+// Component bảo vệ Route
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const location = useLocation();
+  const isLoggedIn = MockDB.isLoggedIn();
+  const isAdmin = MockDB.isAdmin();
+
+  if (!isLoggedIn) {
+    // Lưu lại trang đang muốn vào để sau khi login quay lại
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (!isAdmin) {
+    // Nếu login rồi nhưng không phải admin thì đẩy về home
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+};
+
 const App: React.FC = () => {
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    const initApp = async () => {
+      await MockDB.init();
+      setIsLoaded(true);
+    };
+    initApp();
+  }, []);
+
+  if (!isLoaded) return <LoadingSkeleton />;
+
   return (
     <Router>
       <ScrollToTop />
@@ -64,18 +94,8 @@ const App: React.FC = () => {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
-          {/* Admin Login Route */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-
-          {/* ✅ Admin Routes (Protected) */}
-          <Route
-            path="/admin"
-            element={
-              <AdminGuard>
-                <AdminLayout />
-              </AdminGuard>
-            }
-          >
+          {/* Admin Routes - Bọc trong ProtectedRoute */}
+          <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
             <Route index element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="stores" element={<AdminStoreManagement />} />
@@ -84,6 +104,7 @@ const App: React.FC = () => {
             <Route path="coupons/new" element={<AdminCouponCreator />} />
             <Route path="coupons/edit/:id" element={<AdminCouponCreator />} />
             <Route path="posts" element={<AdminPostManagement />} />
+            <Route path="menu" element={<AdminMenuManagement />} />
             <Route path="editor" element={<AdminEditor />} />
             <Route path="analytics" element={<AdminAnalytics />} />
             <Route path="users" element={<AdminUserManagement />} />

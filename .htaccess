@@ -1,0 +1,25 @@
+
+# 1. Đảm bảo server trả về đúng kiểu MIME cho các file TypeScript/JSX
+<IfModule mod_mime.c>
+  AddType application/javascript .ts
+  AddType application/javascript .tsx
+  AddType application/javascript .js
+</IfModule>
+
+# 2. Cấu hình Single Page Application (SPA)
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  
+  # Không xử lý nếu là file api.php hoặc index.html
+  RewriteRule ^api\.php$ - [L]
+  RewriteRule ^index\.html$ - [L]
+  
+  # Quan trọng: Nếu file tồn tại (bao gồm .tsx, .ts, .css, .js) thì trả về trực tiếp, không redirect
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+  
+  # Redirect tất cả các đường dẫn ảo khác về index.html để React Router xử lý
+  RewriteRule . /index.html [L]
+</IfModule>
